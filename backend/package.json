@@ -1,0 +1,30 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Smart Retail Shelf Monitor Backend",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/seed/seedShelves.js",
+    "sim": "node src/simulator/simulate.js",
+    "sim:empty": "node src/simulator/simulate.js empty",
+    "sim:low": "node src/simulator/simulate.js low",
+    "sim:misplaced": "node src/simulator/simulate.js misplaced",
+    "sim:normal": "node src/simulator/simulate.js normal",
+    "sim:auto": "node src/simulator/simulate.js auto"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "mongoose": "^9.10.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

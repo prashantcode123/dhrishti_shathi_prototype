@@ -5,6 +5,8 @@ import ShelfGrid from "../components/ShelfGrid.jsx";
 import AlertList from "../components/AlertList.jsx";
 import DetectionTable from "../components/DetectionTable.jsx";
 import SimulatorPanel from "../components/SimulatorPanel.jsx";
+import useAlertToasts from "../hooks/useAlertToasts";
+import ToastContainer from "../components/ToastContainer";
 import { usePolling } from "../hooks/usePolling.js";
 import {
   getStats,
@@ -53,6 +55,7 @@ export default function Dashboard() {
   // Track timestamp of the last successful fetch for the header
   const [lastUpdated, setLastUpdated] = useState(null);
 
+
   // Wrap fetchAll so we can capture the success timestamp
   const fetcher = useCallback(async () => {
     const result = await fetchAll();
@@ -88,6 +91,8 @@ export default function Dashboard() {
   const detections = data?.detections || [];
 
   const isLive = !error && data !== null;
+  
+  const { toasts, dismiss } = useAlertToasts(alerts);
 
   // ── First-load state ──────────────────────────────────────────────────────
   if (loading) {
@@ -102,6 +107,7 @@ export default function Dashboard() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <Header isLive={isLive} lastUpdated={lastUpdated} onReset={handleReset} resetting={resetting} />
 
       {/* Backend offline banner */}

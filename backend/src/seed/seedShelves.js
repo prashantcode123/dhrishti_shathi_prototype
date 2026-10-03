@@ -5,6 +5,8 @@ import Shelf from "../models/Shelf.js";
 import Alert from "../models/Alert.js";
 import Detection from "../models/Detection.js";
 import { DEMO_EMAIL } from "../services/shopResolver.js";
+import { productForShelf } from "../services/defaultProducts.js";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -36,6 +38,7 @@ const seed = async () => {
     address: "Demo Street",
     city: "Raipur",
     numberOfShelves: 12,
+    password: await bcrypt.hash("demo1234", 10),
   });
 
   const shelves = [];

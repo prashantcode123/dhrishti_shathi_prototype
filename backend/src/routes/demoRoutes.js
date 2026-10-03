@@ -3,14 +3,15 @@ import Detection from "../models/Detection.js";
 import Shelf from "../models/Shelf.js";
 import Alert from "../models/Alert.js";
 import { resolveShopId } from "../services/shopResolver.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // POST /api/demo/reset?shopId= : reset only this shop
-router.post("/reset", async (req, res, next) => {
+router.post("/reset", requireAuth, async (req, res, next) => {
   try {
-    const shopId = await resolveShopId(req.query.shopId || req.body?.shopId);
-    await Detection.deleteMany({ shopId });
+    const shopId = await resolveShopId(req.shopId || req.body?.shopId);
+    await Detection.deleteMany({ shopId }); 
     await Alert.deleteMany({ shopId });
     await Shelf.updateMany(
       { shopId },

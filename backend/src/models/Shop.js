@@ -11,6 +11,7 @@ const shopSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    password: { type: String, required: true, select: false },
     phone: { type: String, required: true, trim: true },
     address: { type: String, trim: true },
     city: { type: String, trim: true },

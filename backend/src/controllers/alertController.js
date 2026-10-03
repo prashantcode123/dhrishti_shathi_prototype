@@ -4,7 +4,7 @@ import { resolveShopId } from "../services/shopResolver.js";
 // GET /api/alerts?shopId=&status=ALL
 export const getAlerts = async (req, res, next) => {
   try {
-    const shopId = await resolveShopId(req.query.shopId);
+    const shopId = await resolveShopId(req.shopId);
     const filter = { shopId };
     if (req.query.status !== "ALL") filter.status = "ACTIVE";
 

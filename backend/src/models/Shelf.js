@@ -13,6 +13,7 @@ const shelfSchema = new mongoose.Schema(
     product: String,
     quantity: Number,
     lastDetectionAt: Date,
+    defaultProduct: String,
   },
   { timestamps: true }
 );

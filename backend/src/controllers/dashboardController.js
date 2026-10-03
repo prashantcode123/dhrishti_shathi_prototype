@@ -5,7 +5,7 @@ import { resolveShopId } from "../services/shopResolver.js";
 // GET /api/dashboard/stats?shopId=
 export const getDashboardStats = async (req, res, next) => {
   try {
-    const shopId = await resolveShopId(req.query.shopId);
+    const shopId = await resolveShopId(req.shopId);
 
     const [totalShelves, emptyShelves, lowStockShelves, misplacedShelves, normalShelves, activeAlerts] =
       await Promise.all([

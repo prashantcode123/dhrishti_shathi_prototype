@@ -11,6 +11,7 @@ import alertRoutes from "./routes/alertRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import demoRoutes from "./routes/demoRoutes.js";
 import shopRoutes from "./routes/shopRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 // Error middleware imports
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
@@ -54,6 +55,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/demo", dashboardRoutes);   // POST /api/demo/reset
 app.use("/api/demo", demoRoutes);
 app.use("/api/shops", shopRoutes);
+
+app.use("/api/auth", authRoutes);
 
 // Register 404 and central error handling middleware (must be registered last)
 app.use(notFound);

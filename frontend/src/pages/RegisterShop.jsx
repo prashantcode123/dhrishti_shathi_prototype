@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { registerShop } from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import { registerShop, saveSession } from "../services/api";
 
 const ALERT_TYPES = [
   { value: "EMPTY", label: "🔴 Empty shelf" },
@@ -17,6 +17,7 @@ export default function RegisterShop() {
     shopName: "",
     ownerName: "",
     email: "",
+    password: "",
     phone: "",
     address: "",
     city: "",
@@ -40,6 +41,7 @@ export default function RegisterShop() {
     const e = {};
     if (!form.shopName.trim()) e.shopName = "Shop name is required";
     if (!form.ownerName.trim()) e.ownerName = "Owner name is required";
+    if (form.password.length < 6) e.password = "Password must be at least 6 characters";
     if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = "Enter a valid email";
     if (!/^\d{10}$/.test(form.phone)) e.phone = "Phone must be exactly 10 digits";
     const n = Number(form.numberOfShelves);
@@ -61,8 +63,7 @@ export default function RegisterShop() {
         numberOfShelves: Number(form.numberOfShelves),
         notifications: { emailEnabled: alertsOn, alertTypes },
       });
-      localStorage.setItem("shopId", data._id);
-      localStorage.setItem("shopName", data.shopName);
+      saveSession(data);
       navigate("/dashboard");
     } catch (err) {
       const d = err.response?.data;
@@ -74,39 +75,48 @@ export default function RegisterShop() {
     }
   };
 
-  const useDemoShop = () => {
-    const id = import.meta.env.VITE_DEMO_SHOP_ID;
-    if (!id) {
-      setServerError("VITE_DEMO_SHOP_ID is missing in frontend/.env (restart npm run dev after adding it)");
-      return;
-    }
-    localStorage.setItem("shopId", id);
-    localStorage.setItem("shopName", "Demo Mart");
-    navigate("/dashboard");
-  };
-
+  // Reusable input. autoComplete="off" is the default; props can override it.
   const field = (name, label, props = {}) => (
     <div>
       <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input name={name} value={form[name]} onChange={change} className={input} {...props} />
+      <input
+        name={name}
+        value={form[name]}
+        onChange={change}
+        className={input}
+        autoComplete="off"
+        {...props}
+      />
       {errors[name] && <p className="mt-1 text-xs text-red-600">{errors[name]}</p>}
     </div>
   );
 
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-md">
+      <form
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-md"
+      >
         <div>
           <h1 className="text-xl font-bold text-gray-900">Register your shop</h1>
-          <p className="text-sm text-gray-500">Get shelf alerts for empty, low-stock and misplaced products.</p>
+          <p className="text-sm text-gray-500">
+            Get shelf alerts for empty, low-stock and misplaced products.
+          </p>
         </div>
 
         {field("shopName", "Shop name")}
         {field("ownerName", "Owner name")}
-        {field("email", "Email", { type: "email" })}
-        {field("phone", "Phone (10 digits)", { inputMode: "numeric", maxLength: 10 })}
+        {field("email", "Email", { type: "email", autoComplete: "new-password" })}
+        {field("password", "Password (min 6 characters)", { type: "password", autoComplete: "new-password" })}
+        {field("phone", "Phone (10 digits)", {
+          inputMode: "numeric",
+          maxLength: 10,
+          autoComplete: "new-password",
+        })}
         <div className="grid gap-4 sm:grid-cols-2">
-          {field("address", "Address")}
+          {field("address", "Address", { autoComplete: "new-password" })}
           {field("city", "City")}
         </div>
         {field("numberOfShelves", "Number of shelves (1-50)", { type: "number", min: 1, max: 50 })}
@@ -114,7 +124,11 @@ export default function RegisterShop() {
         <div className="rounded-lg bg-gray-50 p-4">
           <label className="flex items-center justify-between text-sm font-medium text-gray-800">
             Popup alerts
-            <input type="checkbox" checked={alertsOn} onChange={(e) => setAlertsOn(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={alertsOn}
+              onChange={(e) => setAlertsOn(e.target.checked)}
+            />
           </label>
           <div className="mt-3 space-y-2">
             {ALERT_TYPES.map((t) => (
@@ -144,10 +158,10 @@ export default function RegisterShop() {
         </button>
 
         <p className="text-center text-sm text-gray-500">
-          Just exploring?{" "}
-          <button type="button" onClick={useDemoShop} className="font-medium text-indigo-600 hover:underline">
-            Use demo shop
-          </button>
+          Already registered?{" "}
+          <Link to="/login" className="font-medium text-indigo-600 hover:underline">
+            LogIn
+          </Link>
         </p>
       </form>
     </div>

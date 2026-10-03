@@ -1,12 +1,14 @@
 import mongoose from "mongoose";
 import Shop from "../models/Shop.js";
 import Shelf from "../models/Shelf.js";
+import { productForShelf } from "../services/defaultProducts.js";
+import bcrypt from "bcryptjs";
+import { signToken } from "../middleware/auth.js";
 
 // POST /api/shops - register a new shop
 export const registerShop = async (req, res, next) => {
     try {
-        const { shopName, ownerName, email, phone, address, city, numberOfShelves, notifications } =
-            req.body;
+        const { shopName, ownerName, email, phone, address, city, numberOfShelves, notifications, password } = req.body;
 
         // Reject duplicate emails with a friendly message
         const existing = await Shop.findOne({ email: email.toLowerCase().trim() });
@@ -18,6 +20,7 @@ export const registerShop = async (req, res, next) => {
             shopName,
             ownerName,
             email,
+            password: await bcrypt.hash(password, 10),
             phone,
             address,
             city,
@@ -32,7 +35,9 @@ export const registerShop = async (req, res, next) => {
         }
         await Shelf.insertMany(shelves);
 
-        res.status(201).json(shop);
+        const safeShop = shop.toObject();
+        delete safeShop.password;
+        res.status(201).json({ token: signToken(shop._id), shop: safeShop });
     } catch (err) {
         // Safety net if two requests with the same email arrive at once
         if (err.code === 11000) {
@@ -46,7 +51,9 @@ export const registerShop = async (req, res, next) => {
 export const getShop = async (req, res, next) => {
     try {
         const { id } = req.params;
-
+        if (id !== req.shopId) {
+            return res.status(403).json({ message: "Not allowed" });
+        }
         if (!mongoose.isValidObjectId(id)) {
             return res.status(400).json({ message: "Invalid shop id" });
         }
@@ -65,8 +72,12 @@ export const getShop = async (req, res, next) => {
 // PATCH /api/shops/:id/notifications - change notification settings
 export const updateNotifications = async (req, res, next) => {
     try {
+        
         const { id } = req.params;
         const { emailEnabled, alertTypes } = req.body;
+        if (id !== req.shopId) {
+            return res.status(403).json({ message: "Not allowed" });
+        }
 
         if (!mongoose.isValidObjectId(id)) {
             return res.status(400).json({ message: "Invalid shop id" });

@@ -61,9 +61,10 @@ export default function Dashboard() {
   const [shop, setShop] = useState(null);
 
   const leaveShop = () => {
+    localStorage.removeItem("token");
     localStorage.removeItem("shopId");
     localStorage.removeItem("shopName");
-    navigate("/register");
+    navigate("/login");
   };
 
   // Load this shop's details; if the saved id is stale (e.g. after re-seeding), go back to register

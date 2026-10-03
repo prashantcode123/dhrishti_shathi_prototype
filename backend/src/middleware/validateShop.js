@@ -1,6 +1,12 @@
 export const validateShop = (req, res, next) => {
-  const { shopName, ownerName, email, phone, numberOfShelves } = req.body;
+  const { shopName, ownerName, email, phone, numberOfShelves, password } = req.body;
   const errors = [];
+
+  if (!password) {
+  errors.push("password is required");
+} else if (password.length < 6) {
+  errors.push("password must be at least 6 characters");
+}
 
   if (!shopName || !shopName.trim()) errors.push("shopName is required");
   if (!ownerName || !ownerName.trim()) errors.push("ownerName is required");

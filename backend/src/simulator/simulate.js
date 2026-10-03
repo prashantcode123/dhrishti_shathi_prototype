@@ -1,7 +1,19 @@
 // Terminal AI Simulator for Smart Retail Shelf Monitor
 // Simulates camera detection events from retail shelves and sends them to the backend API
 
+import dotenv from "dotenv";
+dotenv.config(); // loads backend/.env (run the script from the backend folder)
+
 const API_URL = process.env.API_URL || "http://localhost:5000/api/detections";
+const API_KEY = process.env.DEVICE_API_KEY || "shelf-device-key-123";
+const SHOP_ID = process.env.SHOP_ID;
+const SHELF_COUNT = Number(process.env.SHELF_COUNT) || 12;
+
+if (!SHOP_ID) {
+  console.error("SHOP_ID is missing. A device must say which shop it reports for.");
+  console.error('PowerShell: $env:SHOP_ID="<shop _id>"; npm run sim:empty');
+  process.exit(1);
+}
 
 // Realistic Indian retail product presets by issue type
 const PRODUCT_TEMPLATES = {
@@ -18,21 +30,9 @@ const PRODUCT_TEMPLATES = {
     { product: "Kurkure Masala Munch", quantity: 2 },
   ],
   MISPLACED: [
-    {
-      product: "Pepsi 500ml",
-      expectedPosition: "ROW-2-COL-3",
-      detectedPosition: "ROW-2-COL-5",
-    },
-    {
-      product: "Tata Salt 1kg",
-      expectedPosition: "ROW-1-COL-1",
-      detectedPosition: "ROW-3-COL-2",
-    },
-    {
-      product: "Haldiram Bhujia 400g",
-      expectedPosition: "ROW-2-COL-1",
-      detectedPosition: "ROW-1-COL-4",
-    },
+    { product: "Pepsi 500ml", expectedPosition: "ROW-2-COL-3", detectedPosition: "ROW-2-COL-5" },
+    { product: "Tata Salt 1kg", expectedPosition: "ROW-1-COL-1", detectedPosition: "ROW-3-COL-2" },
+    { product: "Haldiram Bhujia 400g", expectedPosition: "ROW-2-COL-1", detectedPosition: "ROW-1-COL-4" },
   ],
   NORMAL: [
     { product: "Parle-G Biscuits" },
@@ -42,23 +42,22 @@ const PRODUCT_TEMPLATES = {
   ],
 };
 
-// Generate a random shelf ID between SHELF-01 and SHELF-12
+// Random shelf between SHELF-01 and SHELF-<SHELF_COUNT>
 const getRandomShelf = () => {
-  const shelfNum = Math.floor(Math.random() * 12) + 1;
+  const shelfNum = Math.floor(Math.random() * SHELF_COUNT) + 1;
   return `SHELF-${String(shelfNum).padStart(2, "0")}`;
 };
 
-// Generate confidence score between 0.85 and 0.98
-const getRandomConfidence = () => {
-  return parseFloat((0.85 + Math.random() * 0.13).toFixed(2));
-};
+// Confidence between 0.85 and 0.98
+const getRandomConfidence = () => parseFloat((0.85 + Math.random() * 0.13).toFixed(2));
 
-// Build a detection event object
+// Build a detection event object (shopId is included here, so every mode sends it)
 const generateEvent = (issueType) => {
   const templates = PRODUCT_TEMPLATES[issueType];
   const template = templates[Math.floor(Math.random() * templates.length)];
 
   return {
+    shopId: SHOP_ID,
     shelfId: getRandomShelf(),
     issueType,
     product: template.product,
@@ -70,16 +69,25 @@ const generateEvent = (issueType) => {
   };
 };
 
-// Send an event payload to the backend API
+// Send an event to the backend API
 const sendDetection = async (event) => {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+      },
       body: JSON.stringify(event),
     });
 
-    const statusText = response.status === 201 ? "SUCCESS (201 Created)" : `STATUS ${response.status}`;
+    let note = "";
+    if (response.status !== 201) {
+      const body = await response.json().catch(() => ({}));
+      note = body.message ? ` - ${body.message}` : "";
+    }
+
+    const statusText = response.status === 201 ? "SUCCESS (201 Created)" : `STATUS ${response.status}${note}`;
     console.log(
       `[SIMULATOR] Sent ${event.issueType} on ${event.shelfId} (${event.product}) | Confidence: ${event.confidence} -> ${statusText}`
     );
@@ -89,7 +97,7 @@ const sendDetection = async (event) => {
   }
 };
 
-// Map CLI argument to valid issue type
+// Map CLI argument to a valid issue type
 const normalizeType = (arg) => {
   switch (arg?.toLowerCase()) {
     case "empty":
@@ -106,7 +114,6 @@ const normalizeType = (arg) => {
   }
 };
 
-// Main execution logic
 const main = async () => {
   const arg = process.argv[2] || "random";
   const issueTypes = ["EMPTY", "LOW_STOCK", "MISPLACED", "NORMAL"];
@@ -119,10 +126,7 @@ const main = async () => {
 
     const tick = async () => {
       const randomType = issueTypes[Math.floor(Math.random() * issueTypes.length)];
-      const event = generateEvent(randomType);
-      await sendDetection(event);
-      const shopId = process.env.SHOP_ID;
-      if (shopId) event.shopId = shopId;
+      await sendDetection(generateEvent(randomType));
     };
 
     await tick();
@@ -132,15 +136,13 @@ const main = async () => {
 
   if (arg === "random") {
     const randomType = issueTypes[Math.floor(Math.random() * issueTypes.length)];
-    const event = generateEvent(randomType);
-    await sendDetection(event);
+    await sendDetection(generateEvent(randomType));
     return;
   }
 
   const issueType = normalizeType(arg);
   if (issueType) {
-    const event = generateEvent(issueType);
-    await sendDetection(event);
+    await sendDetection(generateEvent(issueType));
   } else {
     console.log("Usage: node src/simulator/simulate.js <empty|low|misplaced|normal|random|auto>");
     process.exit(1);

@@ -45,4 +45,10 @@ export const resetDemo = async () => {
   return response.data;
 };
 
+
+export const registerShop = (payload) => api.post("/shops", payload);
+export const getShop = (id) => api.get(`/shops/${id}`);
+export const updateNotifications = (id, payload) =>
+  api.patch(`/shops/${id}/notifications`, payload);
+
 export default api;

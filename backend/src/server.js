@@ -23,7 +23,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware: Enable CORS and parse incoming JSON bodies
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",") : true,
+  })
+);
 app.use(express.json());
 
 // Root test route

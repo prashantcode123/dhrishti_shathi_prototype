@@ -8,43 +8,44 @@ const api = axios.create({
   },
 });
 
-// Fetch dashboard overview statistics
+// Read the shop chosen at registration (or "Use demo shop")
+const getShopId = () => localStorage.getItem("shopId");
+
+// Dashboard overview statistics for the current shop
 export const getStats = async () => {
-  const response = await api.get("/dashboard/stats");
+  const response = await api.get("/dashboard/stats", { params: { shopId: getShopId() } });
   return response.data;
 };
 
-// Fetch status of all 12 shelves
+// Status of all shelves of the current shop
 export const getShelves = async () => {
-  const response = await api.get("/shelves");
+  const response = await api.get("/shelves", { params: { shopId: getShopId() } });
   return response.data;
 };
 
-// Fetch alerts (active by default, or with optional status filter)
+// Alerts (active by default, or with optional status filter)
 export const getAlerts = async (status) => {
-  const params = status ? { status } : {};
+  const params = { shopId: getShopId() };
+  if (status) params.status = status;
   const response = await api.get("/alerts", { params });
   return response.data;
 };
 
-// Fetch detection history log
+// Detection history log
 export const getDetections = async (limit = 20) => {
-  const response = await api.get("/detections", { params: { limit } });
+  const response = await api.get("/detections", { params: { shopId: getShopId(), limit } });
   return response.data;
 };
 
-// Send a new detection event
+// Send a new detection event to the current shop
 export const sendDetection = async (payload) => {
-  const response = await api.post("/detections", payload);
+  const response = await api.post("/detections", { ...payload, shopId: getShopId() });
   return response.data;
 };
 
-// Reset all demo data — wipes detections, alerts, and restores all shelves to NORMAL
-export const resetDemo = async () => {
-  const response = await api.post("/demo/reset");
-  return response.data;
-};
-
+// Reset demo data for the current shop only
+export const resetDemo = () =>
+  api.post("/demo/reset", { shopId: getShopId() });
 
 export const registerShop = (payload) => api.post("/shops", payload);
 export const getShop = (id) => api.get(`/shops/${id}`);

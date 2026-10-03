@@ -1,4 +1,4 @@
-# 🛒 Smart Retail Shelf Monitor
+# 🛒 DrishtiShati AI
 
 An Edge-AI based system that watches retail shelves and turns detections into instant retailer alerts: **empty shelves, low stock, and misplaced products**.
 
@@ -218,8 +218,7 @@ Planned improvements:
 
 ## 👥 Team
 
-- Your Name: role
-- Teammate: role
+- Team Name : Visionaryz
 
 ## 📄 License
 
